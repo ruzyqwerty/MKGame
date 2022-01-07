@@ -1,6 +1,5 @@
 using System;
 using System.Collections.Generic;
-using GameManager;
 using Infrastructure;
 using UnityEngine;
 
@@ -28,10 +27,9 @@ namespace Game
     public class LobbyUser : Observed<LobbyUser>
     {
         public LobbyUser(bool isHost = false, string displayName = null, string id = null,
-            EmoteType emote = EmoteType.None, UserStatus userStatus = UserStatus.Menu, bool isApproved = false)
+            EmoteType emote = EmoteType.None, UserStatus userStatus = UserStatus.Menu, bool isApproved = false, int playerOrder = -1)
         {
-            List<string> characters = new List<string> { "Maxim" };
-            m_data = new UserData(isHost, displayName, id, emote, userStatus, isApproved);
+            m_data = new UserData(isHost, displayName, id, emote, userStatus, isApproved, playerOrder);
         }
 
         #region Local UserData
@@ -44,8 +42,9 @@ namespace Game
             public EmoteType Emote { get; set; }
             public UserStatus UserStatus { get; set; }
             public bool IsApproved { get; set; }
+            public int PlayerOrder { get; set; }
 
-            public UserData(bool isHost, string displayName, string id, EmoteType emote, UserStatus userStatus, bool isApproved)
+            public UserData(bool isHost, string displayName, string id, EmoteType emote, UserStatus userStatus, bool isApproved, int playerOrder)
             {
                 IsHost = isHost;
                 DisplayName = displayName;
@@ -53,6 +52,7 @@ namespace Game
                 Emote = emote;
                 UserStatus = userStatus;
                 IsApproved = isApproved;
+                PlayerOrder = playerOrder;
             }
         }
 
@@ -60,7 +60,7 @@ namespace Game
 
         public void ResetState()
         {
-            m_data = new UserData(false, m_data.DisplayName, m_data.ID, EmoteType.None, UserStatus.Menu, false); // ID and DisplayName should persist since this might be the local user.
+            m_data = new UserData(false, m_data.DisplayName, m_data.ID, EmoteType.None, UserStatus.Menu, false, -1); // ID and DisplayName should persist since this might be the local user.
         }
 
         #endregion
@@ -76,7 +76,8 @@ namespace Game
             Emote = 4,
             ID = 8,
             UserStatus = 16,
-            IsApproved = 32
+            IsApproved = 32,
+            PlayerOrder = 33
         }
 
         private UserMembers m_lastChanged;
@@ -169,6 +170,20 @@ namespace Game
                 }
             }
         }
+        
+        public int PlayerOrder
+        {
+            get => m_data.PlayerOrder;
+            set
+            {
+                if (m_data.PlayerOrder == -1 || value == -1)
+                {
+                    m_data.PlayerOrder = value;
+                    m_lastChanged = UserMembers.PlayerOrder;
+                    OnChanged(this);
+                }
+            }
+        }
 
         public override void CopyObserved(LobbyUser observed)
         {
@@ -178,7 +193,8 @@ namespace Game
                 (m_data.DisplayName == data.DisplayName ? 0 : (int) UserMembers.DisplayName) |
                 (m_data.ID == data.ID ? 0 : (int) UserMembers.ID) |
                 (m_data.Emote == data.Emote ? 0 : (int) UserMembers.Emote) |
-                (m_data.UserStatus == data.UserStatus ? 0 : (int) UserMembers.UserStatus);
+                (m_data.UserStatus == data.UserStatus ? 0 : (int) UserMembers.UserStatus) |
+                (m_data.PlayerOrder == data.PlayerOrder ? 0 : (int) UserMembers.PlayerOrder);
 
             if (lastChanged == 0) // Ensure something actually changed.
                 return;

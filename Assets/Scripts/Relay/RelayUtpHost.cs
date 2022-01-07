@@ -17,6 +17,7 @@ namespace Relay
             m_hasSentInitialMessage = true; // The host will be alone in the lobby at first, so they need not send any messages right away.
             Locator.Get.Messenger.Subscribe(this);
         }
+
         protected override void Uninitialize()
         {
             base.Uninitialize();

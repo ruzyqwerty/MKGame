@@ -73,10 +73,14 @@ namespace Infrastructure
         ClientUserApproved = 104,
         ClientUserSeekingDisapproval = 105,
         
-        PlayerSetTeam = 120,
         
-        StartSoloGame = 150,
-        StartOnlineGame = 151,
+        SetPlayerMoney = 111,
+        SetPlayerCards = 112,
+        SetPlayerSights = 113,
+        SetPlayerOrder = 114,
+        
+        
+        StartGame = 151,
         EndGame = 160,
 
         StartCountdown = 200,

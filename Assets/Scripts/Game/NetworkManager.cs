@@ -2,7 +2,6 @@ using System;
 using System.Collections;
 using System.Collections.Generic;
 using Auth;
-using GameManager;
 using Infrastructure;
 using LobbyAPI;
 using Relay;
@@ -142,39 +141,51 @@ namespace Game
                 m_localUser.DisplayName = (string)msg;
             }       
             else if (type == MessageType.ClientUserApproved)
-            {   ConfirmApproval();
+            {   
+                ConfirmApproval();
             }
             else if (type == MessageType.UserSetEmote)
-            {   EmoteType emote = (EmoteType)msg;
+            {   
+                EmoteType emote = (EmoteType)msg;
                 m_localUser.Emote = emote;
             }
             else if (type == MessageType.LobbyUserStatus)
-            {   m_localUser.UserStatus = (UserStatus)msg;
+            {   
+                m_localUser.UserStatus = (UserStatus)msg;
             }
             else if (type == MessageType.StartCountdown)
-            {   m_localLobby.State = LobbyState.CountDown;
+            {   
+                m_localLobby.State = LobbyState.CountDown;
             }
             else if (type == MessageType.CancelCountdown)
-            {   m_localLobby.State = LobbyState.Lobby;
+            {   
+                m_localLobby.State = LobbyState.Lobby;
             }
             else if (type == MessageType.CompleteCountdown)
-            {   if (m_relayClient is RelayUtpHost)
-                    (m_relayClient as RelayUtpHost).SendInGameState();
+            {   
+                if (m_relayClient is RelayUtpHost) 
+                    (m_relayClient as RelayUtpHost)?.SendInGameState();
             }
             else if (type == MessageType.ChangeGameState)
-            {   SetGameState((GameState)msg);
+            {   
+                SetGameState((GameState)msg);
             }
             else if (type == MessageType.ConfirmInGameState)
             {   
                 m_localUser.UserStatus = UserStatus.InGame;
                 m_localLobby.State = LobbyState.InGame;
 
-                // SceneManager.LoadSceneAsync("Scenes/Game");
+                SceneManager.LoadSceneAsync("Scenes/Game");
             }
             else if (type == MessageType.EndGame)
             {
                 m_localLobby.State = LobbyState.Lobby;
                 SetUserLobbyState();
+            }
+            else if (type == MessageType.SetPlayerOrder)
+            {
+                m_relayClient.SendMessage(((int) msg).ToString());
+                m_localUser.PlayerOrder = (int) msg;
             }
         }
 
@@ -204,7 +215,6 @@ namespace Game
         private void OnCreatedLobby()
         {
             m_localUser.IsHost = true;
-            OnReceiveMessage(MessageType.PlayerSetTeam, TeamStates.Team1);
             OnJoinedLobby();
         }
 
@@ -213,10 +223,7 @@ namespace Game
             LobbyAsyncRequests.Instance.BeginTracking(m_localLobby.LobbyID);
             m_lobbyContentHeartbeat.BeginTracking(m_localLobby, m_localUser);
             SetUserLobbyState();
-            
-            if (!m_localUser.IsHost)
-                OnReceiveMessage(MessageType.PlayerSetTeam, TeamStates.Team2);
-            
+
             OnReceiveMessage(MessageType.LobbyUserStatus, UserStatus.Connecting);
             StartRelayConnection();
         }
@@ -229,11 +236,13 @@ namespace Game
             LobbyAsyncRequests.Instance.EndTracking();
 
             if (m_relaySetup != null)
-            {   Component.Destroy(m_relaySetup);
+            {   
+                Component.Destroy(m_relaySetup);
                 m_relaySetup = null;
             }
             if (m_relayClient != null)
-            {   Component.Destroy(m_relayClient);
+            {   
+                Component.Destroy(m_relayClient);
                 m_relayClient = null;
             }
         }
@@ -267,9 +276,13 @@ namespace Game
 
                 m_relayClient = client;
                 if (m_localUser.IsHost)
+                {
                     CompleteRelayConnection();
+                }
                 else
+                {
                     Debug.Log("Client is now waiting for approval...");
+                }
             }
         }
 
