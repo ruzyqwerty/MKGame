@@ -31,7 +31,7 @@ namespace Game
             EmoteType emote = EmoteType.None, UserStatus userStatus = UserStatus.Menu, bool isApproved = false)
         {
             List<string> characters = new List<string> { "Maxim" };
-            m_data = new UserData(isHost, displayName, id, emote, userStatus, isApproved, TeamStates.None, characters);
+            m_data = new UserData(isHost, displayName, id, emote, userStatus, isApproved);
         }
 
         #region Local UserData
@@ -44,11 +44,8 @@ namespace Game
             public EmoteType Emote { get; set; }
             public UserStatus UserStatus { get; set; }
             public bool IsApproved { get; set; }
-            public TeamStates TeamState { get; set; }
-            
-            public List<string> Characters { get; set; }
 
-            public UserData(bool isHost, string displayName, string id, EmoteType emote, UserStatus userStatus, bool isApproved, TeamStates teamState, List<string> characters)
+            public UserData(bool isHost, string displayName, string id, EmoteType emote, UserStatus userStatus, bool isApproved)
             {
                 IsHost = isHost;
                 DisplayName = displayName;
@@ -56,8 +53,6 @@ namespace Game
                 Emote = emote;
                 UserStatus = userStatus;
                 IsApproved = isApproved;
-                TeamState = teamState;
-                Characters = characters;
             }
         }
 
@@ -65,7 +60,7 @@ namespace Game
 
         public void ResetState()
         {
-            m_data = new UserData(false, m_data.DisplayName, m_data.ID, EmoteType.None, UserStatus.Menu, false, TeamStates.None, new List<string>()); // ID and DisplayName should persist since this might be the local user.
+            m_data = new UserData(false, m_data.DisplayName, m_data.ID, EmoteType.None, UserStatus.Menu, false); // ID and DisplayName should persist since this might be the local user.
         }
 
         #endregion
@@ -81,8 +76,7 @@ namespace Game
             Emote = 4,
             ID = 8,
             UserStatus = 16,
-            IsApproved = 32,
-            TeamStates = 64
+            IsApproved = 32
         }
 
         private UserMembers m_lastChanged;
@@ -176,42 +170,15 @@ namespace Game
             }
         }
 
-        public TeamStates TeamStates
-        {
-            get => m_data.TeamState;
-
-            set
-            {
-                if (m_data.TeamState != value)
-                {
-                    m_data.TeamState = value;
-                    m_lastChanged = UserMembers.TeamStates;
-                    OnChanged(this);
-                }
-            }
-        }
-
-        public List<string> Characters
-        {
-            get => m_data.Characters;
-
-            set
-            {
-                m_data.Characters = value;
-                OnChanged(this);
-            }
-        }
-
         public override void CopyObserved(LobbyUser observed)
         {
             UserData data = observed.m_data;
             int lastChanged = // Set flags just for the members that will be changed.
-                (m_data.IsHost == data.IsHost ?           0 : (int)UserMembers.IsHost) |
-                (m_data.DisplayName == data.DisplayName ? 0 : (int)UserMembers.DisplayName) |
-                (m_data.ID == data.ID ?                   0 : (int)UserMembers.ID) |
-                (m_data.Emote == data.Emote ?             0 : (int)UserMembers.Emote) |
-                (m_data.UserStatus == data.UserStatus ?   0 : (int)UserMembers.UserStatus) | 
-                (m_data.TeamState == data.TeamState ?     0 : (int)UserMembers.TeamStates);
+                (m_data.IsHost == data.IsHost ? 0 : (int) UserMembers.IsHost) |
+                (m_data.DisplayName == data.DisplayName ? 0 : (int) UserMembers.DisplayName) |
+                (m_data.ID == data.ID ? 0 : (int) UserMembers.ID) |
+                (m_data.Emote == data.Emote ? 0 : (int) UserMembers.Emote) |
+                (m_data.UserStatus == data.UserStatus ? 0 : (int) UserMembers.UserStatus);
 
             if (lastChanged == 0) // Ensure something actually changed.
                 return;

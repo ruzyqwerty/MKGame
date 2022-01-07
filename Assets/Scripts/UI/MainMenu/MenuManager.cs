@@ -46,7 +46,7 @@ namespace UI.MainMenu
 
         private void Update()
         {
-            Game.GameManager gameManager = FindObjectOfType<Game.GameManager>();
+            NetworkManager gameManager = FindObjectOfType<NetworkManager>();
             if (gameManager != null)
             {
                 var (localGameState, localUser, localLobby, lobbyServiceData) = gameManager.GetMenuManagerData();
