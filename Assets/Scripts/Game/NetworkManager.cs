@@ -163,8 +163,11 @@ namespace Game
             }
             else if (type == MessageType.CompleteCountdown)
             {   
-                if (m_relayClient is RelayUtpHost) 
+                if (m_relayClient is RelayUtpHost)
+                {
                     (m_relayClient as RelayUtpHost)?.SendInGameState();
+                    (m_relayClient as RelayUtpHost)?.SetPlayersOrder();
+                }
             }
             else if (type == MessageType.ChangeGameState)
             {   
@@ -174,7 +177,7 @@ namespace Game
             {   
                 m_localUser.UserStatus = UserStatus.InGame;
                 m_localLobby.State = LobbyState.InGame;
-
+                
                 SceneManager.LoadSceneAsync("Scenes/Game");
             }
             else if (type == MessageType.EndGame)
@@ -184,8 +187,8 @@ namespace Game
             }
             else if (type == MessageType.SetPlayerOrder)
             {
-                m_relayClient.SendMessage(((int) msg).ToString());
                 m_localUser.PlayerOrder = (int) msg;
+                Debug.LogError($"I got Order: {(int) msg}");
             }
         }
 

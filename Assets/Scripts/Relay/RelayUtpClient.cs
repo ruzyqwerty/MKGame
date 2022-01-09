@@ -23,7 +23,7 @@ namespace Relay
         protected bool m_hasSentInitialMessage = false;
         private const float k_heartbeatPeriod = 5;
 
-        protected enum MsgType
+        public enum MsgType
         {
             Ping = 0,
             NewPlayer,
@@ -61,10 +61,10 @@ namespace Relay
             Uninitialize();
         }
 
-        public void SendMessage(string msg)
+        public void SendMessage(string msg, MsgType type)
         {
             foreach (NetworkConnection connection in m_connections)
-                WriteString(m_networkDriver, connection, m_localUser.ID, MsgType.SetPlayerOrder, msg);
+                WriteString(m_networkDriver, connection, m_localUser.ID, type, msg);
         }
 
         private void OnLocalChange(LobbyUser localUser)
@@ -130,9 +130,20 @@ namespace Relay
                 }
 
                 string id = System.Text.Encoding.UTF8.GetString(msgContents.GetRange(2, idLength).ToArray());
-                if (!CanProcessDataEventFor(conn, msgType, id))
-                    return;
                 msgContents.RemoveRange(0, 2 + idLength);
+                
+                if (msgType == MsgType.SetPlayerOrder)
+                {
+                    Debug.LogError($"self: {m_localUser.ID}:  player {id} get Order: {(int) msgContents[0]}");
+                    if (id == m_localUser.ID)
+                        Locator.Get.Messenger.OnReceiveMessage(MessageType.SetPlayerOrder, (int) msgContents[0]);
+                    m_localLobby.LobbyUsers[id].PlayerOrder = msgContents[0];
+                }
+                
+                if (!CanProcessDataEventFor(conn, msgType, id))
+                {
+                    return;
+                }
 
                 if (msgType == MsgType.PlayerApprovalState)
                 {
@@ -166,11 +177,6 @@ namespace Relay
                     Locator.Get.Messenger.OnReceiveMessage(MessageType.ConfirmInGameState, null);
                 else if (msgType == MsgType.EndInGame)
                     Locator.Get.Messenger.OnReceiveMessage(MessageType.EndGame, null);
-                else if (msgType == MsgType.SetPlayerOrder)
-                {
-                    m_localLobby.LobbyUsers[id].PlayerOrder = msgContents[0];
-                    Debug.LogError($"Player {id} get Order: {msgContents[0]}");
-                }
 
                 ProcessNetworkEventDataAdditional(conn, msgType, id);
             }

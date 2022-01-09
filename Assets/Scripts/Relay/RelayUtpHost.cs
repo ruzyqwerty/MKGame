@@ -2,6 +2,7 @@
 using Game;
 using Infrastructure;
 using Unity.Networking.Transport;
+using UnityEngine;
 
 namespace Relay
 {
@@ -16,6 +17,24 @@ namespace Relay
             base.Initialize(networkDriver, connections, localUser, localLobby);
             m_hasSentInitialMessage = true; // The host will be alone in the lobby at first, so they need not send any messages right away.
             Locator.Get.Messenger.Subscribe(this);
+        }
+        
+        public void SetPlayersOrder()
+        {
+            int order = 0;
+            foreach (var user in m_localLobby.LobbyUsers)
+            {
+                if (user.Value.ID == m_localUser.ID)
+                    Locator.Get.Messenger.OnReceiveMessage(MessageType.SetPlayerOrder, order);
+                user.Value.PlayerOrder = order;
+                foreach (NetworkConnection connection in m_connections)
+                {
+                    Debug.LogError($"Send to {connection.InternalId} that player {user.Value.ID} get order {user.Value.PlayerOrder}");
+                    WriteByte(m_networkDriver, connection, user.Value.ID, MsgType.SetPlayerOrder, (byte) user.Value.PlayerOrder);
+                }
+
+                order++;
+            }
         }
 
         protected override void Uninitialize()
@@ -125,7 +144,8 @@ namespace Relay
             foreach (var user in m_localLobby.LobbyUsers)
             {
                 if (user.Value.UserStatus != UserStatus.Ready)
-                {   haveAllReadied = false;
+                {   
+                    haveAllReadied = false;
                     break;
                 }
             }
