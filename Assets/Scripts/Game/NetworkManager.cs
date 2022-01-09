@@ -28,10 +28,38 @@ namespace Game
 
         private MenuManager _menuManager;
 
+        private GameManager _gameManager;
+
         /// <summary>Rather than a setter, this is usable in-editor. It won't accept an enum, however.</summary>
         public void SetLobbyColorFilter(int color)
         {
             m_lobbyColorFilter = (LobbyColor)color;
+        }
+
+        public int GetPlayerOrder()
+        {
+            return m_localUser.Order;
+        }
+
+        public string GetPlayerName()
+        {
+            return m_localUser.DisplayName;
+        }
+
+        public string GetPlayerNameByOrder(int order)
+        {
+            foreach (var user in m_localLobby.LobbyUsers)
+            {
+                if (user.Value.Order == order)
+                    return user.Value.DisplayName;
+            }
+
+            return "Not found";
+        }
+
+        public void SetGameManager(GameManager manager)
+        {
+            _gameManager = manager;
         }
 
         private LobbyColor m_lobbyColorFilter;
@@ -84,6 +112,17 @@ namespace Game
         public (LocalGameState, LobbyUser, LocalLobby, LobbyServiceData) GetMenuManagerData()
         {
             return (m_localGameState, m_localUser, m_localLobby, m_lobbyServiceData);
+        }
+
+        public void SendRollResult(int result)
+        {
+            Locator.Get.Messenger.OnReceiveMessage(MessageType.RollResult, result);
+            m_relayClient.SendRollResult(result);
+        }
+
+        public void SendPlayerMoney(int value)
+        {
+            m_relayClient.SendPlayerMoney(value, m_localUser.ID);
         }
 
         /// <summary>
@@ -187,8 +226,15 @@ namespace Game
             }
             else if (type == MessageType.SetPlayerOrder)
             {
-                m_localUser.PlayerOrder = (int) msg;
-                Debug.LogError($"I got Order: {(int) msg}");
+                m_localUser.Order = (int) msg;
+            }
+            else if (type == MessageType.RollResult)
+            {
+                _gameManager.SetDiceResult((int) msg);
+            }
+            else if (type == MessageType.SetPlayerMoney)
+            {
+                _gameManager.SetDiceResult((int) msg);
             }
         }
 

@@ -26,11 +26,11 @@ namespace Relay
             {
                 if (user.Value.ID == m_localUser.ID)
                     Locator.Get.Messenger.OnReceiveMessage(MessageType.SetPlayerOrder, order);
-                user.Value.PlayerOrder = order;
+                user.Value.Order = order;
                 foreach (NetworkConnection connection in m_connections)
                 {
-                    Debug.LogError($"Send to {connection.InternalId} that player {user.Value.ID} get order {user.Value.PlayerOrder}");
-                    WriteByte(m_networkDriver, connection, user.Value.ID, MsgType.SetPlayerOrder, (byte) user.Value.PlayerOrder);
+                    Debug.LogError($"Send to {connection.InternalId} that player {user.Value.ID} get order {user.Value.Order}");
+                    WriteByte(m_networkDriver, connection, user.Value.ID, MsgType.SetPlayerOrder, (byte) user.Value.Order);
                 }
 
                 order++;

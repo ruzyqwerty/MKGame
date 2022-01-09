@@ -27,9 +27,10 @@ namespace Game
     public class LobbyUser : Observed<LobbyUser>
     {
         public LobbyUser(bool isHost = false, string displayName = null, string id = null,
-            EmoteType emote = EmoteType.None, UserStatus userStatus = UserStatus.Menu, bool isApproved = false, int playerOrder = -1)
+            EmoteType emote = EmoteType.None, UserStatus userStatus = UserStatus.Menu, bool isApproved = false,
+            int playerOrder = -1, int money = 0)
         {
-            m_data = new UserData(isHost, displayName, id, emote, userStatus, isApproved, playerOrder);
+            m_data = new UserData(isHost, displayName, id, emote, userStatus, isApproved, playerOrder, money);
         }
 
         #region Local UserData
@@ -42,9 +43,10 @@ namespace Game
             public EmoteType Emote { get; set; }
             public UserStatus UserStatus { get; set; }
             public bool IsApproved { get; set; }
-            public int PlayerOrder { get; set; }
+            public int Order { get; set; }
+            public int Money { get; set; }
 
-            public UserData(bool isHost, string displayName, string id, EmoteType emote, UserStatus userStatus, bool isApproved, int playerOrder)
+            public UserData(bool isHost, string displayName, string id, EmoteType emote, UserStatus userStatus, bool isApproved, int order, int money)
             {
                 IsHost = isHost;
                 DisplayName = displayName;
@@ -52,7 +54,8 @@ namespace Game
                 Emote = emote;
                 UserStatus = userStatus;
                 IsApproved = isApproved;
-                PlayerOrder = playerOrder;
+                Order = order;
+                Money = money;
             }
         }
 
@@ -60,7 +63,7 @@ namespace Game
 
         public void ResetState()
         {
-            m_data = new UserData(false, m_data.DisplayName, m_data.ID, EmoteType.None, UserStatus.Menu, false, -1); // ID and DisplayName should persist since this might be the local user.
+            m_data = new UserData(false, m_data.DisplayName, m_data.ID, EmoteType.None, UserStatus.Menu, false, -1, 0); // ID and DisplayName should persist since this might be the local user.
         }
 
         #endregion
@@ -77,7 +80,8 @@ namespace Game
             ID = 8,
             UserStatus = 16,
             IsApproved = 32,
-            PlayerOrder = 33
+            Order = 33,
+            Money = 34
         }
 
         private UserMembers m_lastChanged;
@@ -171,15 +175,29 @@ namespace Game
             }
         }
         
-        public int PlayerOrder
+        public int Order
         {
-            get => m_data.PlayerOrder;
+            get => m_data.Order;
             set
             {
-                if (m_data.PlayerOrder == -1 || value == -1)
+                if (m_data.Order == -1 || value == -1)
                 {
-                    m_data.PlayerOrder = value;
-                    m_lastChanged = UserMembers.PlayerOrder;
+                    m_data.Order = value;
+                    m_lastChanged = UserMembers.Order;
+                    OnChanged(this);
+                }
+            }
+        }
+
+        public int Money
+        {
+            get => m_data.Money;
+            set
+            {
+                if (m_data.Money != value)
+                {
+                    m_data.Money = value;
+                    m_lastChanged = UserMembers.Money;
                     OnChanged(this);
                 }
             }
@@ -194,7 +212,8 @@ namespace Game
                 (m_data.ID == data.ID ? 0 : (int) UserMembers.ID) |
                 (m_data.Emote == data.Emote ? 0 : (int) UserMembers.Emote) |
                 (m_data.UserStatus == data.UserStatus ? 0 : (int) UserMembers.UserStatus) |
-                (m_data.PlayerOrder == data.PlayerOrder ? 0 : (int) UserMembers.PlayerOrder);
+                (m_data.Order == data.Order ? 0 : (int) UserMembers.Order) |
+                (m_data.Money == data.Money ? 0 : (int) UserMembers.Money);
 
             if (lastChanged == 0) // Ensure something actually changed.
                 return;

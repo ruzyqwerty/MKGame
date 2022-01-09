@@ -36,7 +36,9 @@ namespace Relay
             ConfirmInGame,
             EndInGame,
             PlayerDisconnect,
-            SetPlayerOrder
+            SetPlayerOrder,
+            RollResult,
+            SetPlayerMoney
         }
 
         public virtual void Initialize(NetworkDriver networkDriver, List<NetworkConnection> connections, LobbyUser localUser, LocalLobby localLobby)
@@ -61,10 +63,20 @@ namespace Relay
             Uninitialize();
         }
 
-        public void SendMessage(string msg, MsgType type)
+        public void SendRollResult(int result)
         {
-            foreach (NetworkConnection connection in m_connections)
-                WriteString(m_networkDriver, connection, m_localUser.ID, type, msg);
+            foreach (NetworkConnection conn in m_connections)
+            {
+                WriteByte(m_networkDriver, conn, m_localUser.ID, MsgType.RollResult, (byte) result);
+            }
+        }
+
+        public void SendPlayerMoney(int value, string userId)
+        {
+            foreach (NetworkConnection conn in m_connections)
+            {
+                WriteByte(m_networkDriver, conn, userId, MsgType.SetPlayerMoney, (byte) value);
+            }
         }
 
         private void OnLocalChange(LobbyUser localUser)
@@ -134,17 +146,39 @@ namespace Relay
                 
                 if (msgType == MsgType.SetPlayerOrder)
                 {
-                    Debug.LogError($"self: {m_localUser.ID}:  player {id} get Order: {(int) msgContents[0]}");
                     if (id == m_localUser.ID)
                         Locator.Get.Messenger.OnReceiveMessage(MessageType.SetPlayerOrder, (int) msgContents[0]);
-                    m_localLobby.LobbyUsers[id].PlayerOrder = msgContents[0];
+                    m_localLobby.LobbyUsers[id].Order = msgContents[0];
                 }
-                
+                else if (msgType == MsgType.RollResult)
+                {
+                    Locator.Get.Messenger.OnReceiveMessage(MessageType.RollResult, (int) msgContents[0]);
+                    if (m_localUser.IsHost)
+                    {
+                        foreach (var connection in m_connections)
+                        {
+                            WriteByte(m_networkDriver, connection, id, MsgType.RollResult, msgContents[0]);
+                        }
+                    }
+                }
+                else if (msgType == MsgType.SetPlayerMoney)
+                {
+                    m_localLobby.LobbyUsers[id].Money = msgContents[0];
+                    Debug.LogError($"Player {m_localLobby.LobbyUsers[id].DisplayName} have {m_localLobby.LobbyUsers[id].Money} rubles");
+                    if (m_localUser.IsHost)
+                    {
+                        foreach (var connection in m_connections)
+                        {
+                            WriteByte(m_networkDriver, connection, id, MsgType.SetPlayerMoney, msgContents[0]);
+                        }
+                    }
+                }
+
                 if (!CanProcessDataEventFor(conn, msgType, id))
                 {
                     return;
                 }
-
+                
                 if (msgType == MsgType.PlayerApprovalState)
                 {
                     Approval approval = (Approval)msgContents[0];

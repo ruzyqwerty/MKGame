@@ -78,6 +78,9 @@ namespace Infrastructure
         SetPlayerCards = 112,
         SetPlayerSights = 113,
         SetPlayerOrder = 114,
+
+        RollResult = 120,
+        CurrentOrder = 120,
         
         
         StartGame = 151,
