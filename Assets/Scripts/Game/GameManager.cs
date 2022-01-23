@@ -11,6 +11,7 @@ namespace Game
 {
     public class GameManager : MonoBehaviour
     {
+        public List<CardScript> AllCards;
         /* Server Sync Variables */
         private int _activePlayerOrder;
 
@@ -48,6 +49,29 @@ namespace Game
                 }
             }
             _networkManager.SendPlayerMoney(_money);
+        }
+
+        public void BuyCard(int id, int cost)
+        {
+            if (_money < cost)
+            {
+                Debug.LogError("Not enough money");
+                return;
+            }
+            Debug.LogError($"Card {id} bought (cost {cost})");
+            AddCard(id);
+        }
+
+        private void AddCard(int id)
+        {
+            foreach (var Card in AllCards)
+            {
+                if (Card.CardID == id)
+                {
+                    Debug.LogError($"Card {id} added");
+                    break;
+                }
+            }
         }
 
         private void Start()

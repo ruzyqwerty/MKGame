@@ -22,6 +22,7 @@ namespace Game
 
     public class CardScript : MonoBehaviour
     {
+        public int CardID;
         public CardEffect effectType;
         public MoveType moveType;
         public int receivedMoney;

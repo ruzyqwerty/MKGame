@@ -8,18 +8,8 @@ namespace UI
     {
         public TextMeshProUGUI MoneyText;
         public Text DebugText;
-    
-        // Start is called before the first frame update
-        void Start()
-        {
-        
-        }
-
-        // Update is called once per frame
-        void Update()
-        {
-        
-        }
+        public GameObject CardPanel;
+        public GameObject MinCardPanel;
 
         public void SetDebugText(string value)
         {
@@ -29,6 +19,16 @@ namespace UI
         public void SetMoney(int value)
         {
             MoneyText.text = $"Money: {value}";
+        }
+
+        public void OnCardPanelEnter()
+        {
+            CardPanel.SetActive(true);
+        }
+
+        public void OnCardPanelExit()
+        {
+            CardPanel.SetActive(false);
         }
     }
 }
